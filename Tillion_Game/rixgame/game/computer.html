@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rock-Paper-Scissors - Fun Version</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: var(--primary-bg);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+      user-select: none;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      text-align: center;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .choices {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .choice-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+      border-radius: 15px;
+      padding: 1em 1.5em;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      width: 130px;
+    }
+
+    .choice-btn:hover {
+      background-color: rgba(255, 255, 255, 0.35);
+      transform: scale(1.05);
+    }
+
+    .choice-btn:active {
+      transform: scale(0.95);
+    }
+
+    .choice-display {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    .choice-box {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 1.5rem;
+      border-radius: 20px;
+      width: 140px;
+      text-align: center;
+      box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
+      opacity: 0;
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    .choice-box.show {
+      opacity: 1;
+    }
+
+    .choice-emoji {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+      opacity: 0;
+      animation: popIn 0.5s ease forwards;
+    }
+
+    .choice-emoji.show {
+      opacity: 1;
+    }
+
+    .choices-text, .result {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .choices-text {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .choices-text.show {
+      opacity: 1;
+    }
+
+    .result {
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .result.win {
+      color: #4CAF50;
+      text-shadow: 0 0 15px #4CAF50;
+    }
+
+    .result.lose {
+      color: #F44336;
+      text-shadow: 0 0 15px #F44336;
+    }
+
+    .result.draw {
+      color: #ccc;
+      text-shadow: 0 0 8px #aaa;
+    }
+
+    .scoreboard {
+      display: flex;
+      gap: 40px;
+      justify-content: center;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    .scoreboard div {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 1rem 2rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .reset-btn {
+      margin-top: 40px;
+      background-color: #e63946;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      font-size: 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: 0.3s ease;
+      box-shadow: 0 4px 14px rgba(230, 57, 70, 0.6);
+    }
+
+    .reset-btn:hover {
+      background-color: #b22234;
+    }
+
+    #confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+    }
+
+    @keyframes popIn {
+      0% {transform: scale(0.5); opacity: 0;}
+      70% {transform: scale(1.2);}
+      100% {transform: scale(1); opacity: 1;}
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+      .choice-btn {
+        width: 100px;
+        font-size: 1rem;
+      }
+      .choice-box {
+        width: 120px;
+      }
+      .choice-emoji {
+        font-size: 2.5rem;
+      }
+      .reset-btn {
+        padding: 12px 24px;
+        font-size: 0.9rem;
+      }
+      .scoreboard {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+  </head>
+<body>
+
+  <h1>Rock-Paper-Scissors</h1>
+  <p>Choose your weapon!</p>
+
+  <div class="choices">
+    <button class="choice-btn" data-choice="rock">🪨 Rock</button>
+    <button class="choice-btn" data-choice="paper">📄 Paper</button>
+    <button class="choice-btn" data-choice="scissors">✂️ Scissors</button>
+  </div>
+  <p>Selected Weapons</p>
+
+  <div class="choice-display" aria-live="polite">
+    <div class="choice-box" id="userChoiceBox" aria-label="Your choice" tabindex="0">
+      <div class="choice-emoji" id="userEmoji"></div>
+      <div>You</div>
+    </div>
+    <div class="choice-box" id="compChoiceBox" aria-label="Computer's choice" tabindex="0">
+      <div class="choice-emoji" id="compEmoji"></div>
+      <div>Computer</div>
+    </div>
+  </div>
+
+  <div class="choices-text" id="choicesText"></div>
+  <div class="result" id="resultText"></div>
+   <p>Result</p>
+  <div class="scoreboard">
+    <div>
+      You: <span id="userScore">0</span>
+    </div>
+    <div>
+      Computer: <span id="compScore">0</span>
+    </div>
+  </div>
+
+  <button class="reset-btn" id="resetBtn">Reset Score</button>
+
+  <canvas id="confetti"></canvas>
+
+  <script>
+    const choices = ['rock', 'paper', 'scissors'];
+    const buttons = document.querySelectorAll('.choice-btn');
+    const resultText = document.getElementById('resultText');
+    const choicesText = document.getElementById('choicesText');
+    const userScoreSpan = document.getElementById('userScore');
+    const compScoreSpan = document.getElementById('compScore');
+    const resetBtn = document.getElementById('resetBtn');
+    const userEmoji = document.getElementById('userEmoji');
+    const compEmoji = document.getElementById('compEmoji');
+    const userChoiceBox = document.getElementById('userChoiceBox');
+    const compChoiceBox = document.getElementById('compChoiceBox');
+
+    // Sounds
+    const winSound = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+    const loseSound = new Audio('https://actions.google.com/sounds/v1/cartoon/boing.ogg');
+    const drawSound = new Audio('https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg');
+
+    // Confetti setup
+    const confettiCanvas = document.getElementById('confetti');
+    const ctx = confettiCanvas.getContext('2d');
+    let confettiPieces = [];
+    let confettiAnimationId;
+
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class ConfettiPiece {
+      constructor() {
+        this.x = Math.random() * confettiCanvas.width;
+        this.y = Math.random() * confettiCanvas.height - confettiCanvas.height;
+        this.size = (Math.random() * 7) + 4;
+        this.speed = (Math.random() * 3) + 2;
+        this.color = `hsl(${Math.random()*360}, 100%, 70%)`;
+        this.angle = Math.random() * 360;
+        this.rotationSpeed = (Math.random() - 0.5) * 10;
+      }
+      update() {
+        this.y += this.speed;
+        this.angle += this.rotationSpeed;
+        if (this.y > confettiCanvas.height) {
+          this.y = -this.size;
+          this.x = Math.random() * confettiCanvas.width;
+        }
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle * Math.PI / 180);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size * 0.4);
+        ctx.restore();
+      }
+    }
+
+    function createConfetti() {
+      confettiPieces = [];
+      for (let i = 0; i < 150; i++) {
+        confettiPieces.push(new ConfettiPiece());
+      }
+    }
+
+    function runConfetti() {
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiPieces.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      confettiAnimationId = requestAnimationFrame(runConfetti);
+    }
+
+    function stopConfetti() {
+      cancelAnimationFrame(confettiAnimationId);
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    }
+
+    function playConfetti(duration = 4000) {
+      createConfetti();
+      runConfetti();
+      setTimeout(stopConfetti, duration);
+    }
+
+    let userScore = 0;
+    let compScore = 0;
+    let isWaiting = false;
+
+    function getComputerChoice() {
+      const randomIndex = Math.floor(Math.random() * choices.length);
+      return choices[randomIndex];
+    }
+
+    function determineWinner(userChoice, compChoice) {
+      if (userChoice === compChoice) return 'draw';
+
+      if (
+        (userChoice === 'rock' && compChoice === 'scissors') ||
+        (userChoice === 'paper' && compChoice === 'rock') ||
+        (userChoice === 'scissors' && compChoice === 'paper')
+      ) {
+        return 'win';
+      } else {
+        return 'lose';
+      }
+    }
+
+    function choiceEmoji(choice) {
+      switch (choice) {
+        case 'rock': return '🪨';
+        case 'paper': return '📄';
+        case 'scissors': return '✂️';
+      }
+    }
+
+    function choiceName(choice) {
+      switch (choice) {
+        case 'rock': return 'Rock';
+        case 'paper': return 'Paper';
+        case 'scissors': return 'Scissors';
+      }
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        if (isWaiting) return; // Prevent clicks during countdown
+        isWaiting = true;
+        resultText.textContent = '';
+        choicesText.textContent = 'Get ready...';
+        userEmoji.textContent = '';
+        compEmoji.textContent = '';
+        userChoiceBox.classList.remove('show');
+        compChoiceBox.classList.remove('show');
+        resultText.className = 'result';
+
+        const userChoice = button.getAttribute('data-choice');
+
+        // Show user choice right away with animation
+        setTimeout(() => {
+          userEmoji.textContent = choiceEmoji(userChoice);
+          userChoiceBox.classList.add('show');
+        }, 300);
+
+        // Countdown before revealing computer choice
+        let countdown = 2;
+        const countdownInterval = setInterval(() => {
+          choicesText.textContent = `Computer reveals in ${countdown}...`;
+          countdown--;
+          if (countdown < 1) {
+            clearInterval(countdownInterval);
+
+            // Reveal computer choice
+            const compChoice = getComputerChoice();
+
+            compEmoji.textContent = choiceEmoji(compChoice);
+            compChoiceBox.classList.add('show');
+            choicesText.textContent = `You chose ${choiceName(userChoice)}, Computer chose ${choiceName(compChoice)}.`;
+
+            const result = determineWinner(userChoice, compChoice);
+
+            if (result === 'win') {
+              resultText.textContent = 'You Win! 🎉';
+              resultText.classList.add('win');
+              userScore++;
+              userScoreSpan.textContent = userScore;
+              winSound.play();
+              playConfetti();
+            } else if (result === 'lose') {
+              resultText.textContent = 'You Lose! 😞';
+              resultText.classList.add('lose');
+              compScore++;
+              compScoreSpan.textContent = compScore;
+              loseSound.play();
+            } else {
+              resultText.textContent = "It's a Draw! 🤝";
+              resultText.classList.add('draw');
+              drawSound.play();
+            }
+
+            isWaiting = false;
+          }
+        }, 1000);
+      });
+    });
+
+    resetBtn.addEventListener('click', () => {
+      if (isWaiting) return;
+      userScore = 0;
+      compScore = 0;
+      userScoreSpan.textContent = userScore;
+      compScoreSpan.textContent = compScore;
+      resultText.textContent = '';
+      choicesText.textContent = '';
+      userEmoji.textContent = '';
+      compEmoji.textContent = '';
+      userChoiceBox.classList.remove('show');
+      compChoiceBox.classList.remove('show');
+      resultText.className = 'result';
+    });
+  </script>
+</body>
+</html>

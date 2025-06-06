@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Profile</title>
+</head>
+<body>
+  <h2>User Profile</h2>
+  <div id="profile"></div>
+  <button onclick="logout()">Logout</button>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'user.html';
+    }
+
+    fetch('http://127.0.0.1:5000/profile.html', {
+      headers: { 'Authorization': token }
+    })
+    .then(res => {
+      if (res.status === 401) throw new Error('Unauthorized');
+      return res.json();
+    })
+    .then(data => {
+      document.getElementById('profile').innerHTML = `
+        <p><strong>Username:</strong> ${data.username}</p>
+        <p><strong>Email:</strong> ${data.email}</p>
+        <p><strong>Score:</strong> ${data.score}</p>
+        <p><strong>Wins:</strong> ${data.wins}</p>
+        <p><strong>Joined:</strong> ${data.joined}</p>
+        <p><strong>Achievements:</strong> ${data.achievements.join(', ')}</p>
+        ${data.avatar ? `<img src="http://127.0.0.1:5000${data.avatar}" width="100">` : ''}
+      `;
+    })
+    .catch(() => {
+      localStorage.removeItem('token');
+      window.location.href = 'user.html';
+    });
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'user.html';
+    }
+  </script>
+</body>
+</html>

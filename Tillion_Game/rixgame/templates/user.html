@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User Authentication | RixGames</title>
+  <link rel="icon" href="logo.png" type="image/x-icon" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6fa;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: white;
+      width: 100%;
+      max-width: 400px;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    h2, h3 { text-align: center; margin-bottom: 20px; }
+
+    .input-group {
+      margin-bottom: 15px;
+      position: relative;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px 40px 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .input-group .icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 14px;
+      color: #888;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #3b82f6;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .toggle-link {
+      display: block;
+      margin-top: 15px;
+      text-align: center;
+      color: #3b82f6;
+      cursor: pointer;
+    }
+
+    #profile {
+      text-align: center;
+      display: none;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #323232;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+    }
+
+    #toast.show { opacity: 1; }
+
+    @media (max-width: 480px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="auth-container">
+  <h2 id="form-title">Sign In</h2>
+
+  <!-- Sign Up Form -->
+  <div class="signup" style="display: none;">
+    <div class="input-group">
+      <input type="text" id="signup-username" placeholder="Username" />
+    </div>
+    <div class="input-group">
+      <input type="email" id="signup-email" placeholder="Email" />
+    </div>
+    <div class="input-group">
+      <input type="date" id="signup-dob" placeholder="Date of Birth" />
+    </div>
+    <div class="input-group">
+      <input type="tel" id="signup-phone" placeholder="Phone Number" />
+    </div>
+    <div class="input-group">
+      <input type="password" id="signup-password" placeholder="Password" />
+      <span class="icon" id="signup-toggle-password">👁️</span>
+    </div>
+  </div>
+
+  <!-- Sign In Form -->
+  <div class="signin">
+    <div class="input-group">
+      <input type="text" id="signin-username" placeholder="Username" />
+    </div>
+    <div class="input-group">
+      <input type="password" id="signin-password" placeholder="Password" />
+      <span class="icon" id="signin-toggle-password">👁️</span>
+    </div>
+  </div>
+
+  <button id="auth-btn" onclick="handleAuth()">Sign In</button>
+  <span class="toggle-link" onclick="toggleForm()">Don't have an account? Sign Up</span>
+</div>
+
+<!-- Profile Container -->
+<div class="container" id="profile">
+  <img id="profile-avatar" src="https://via.placeholder.com/100" alt="Avatar"
+       style="border-radius: 50%; width: 100px; height: 100px; margin: 0 auto 15px; display: block;" />
+  <h3>
+    Welcome,
+    <input id="editable-username"
+           style="font-size: 20px; text-align: center; border: none; border-bottom: 1px solid #ccc; outline: none;" />
+  </h3>
+  <p><strong>Email:</strong> <span id="profile-email">Loading...</span></p>
+  <p><strong>Joined:</strong> <span id="profile-joined">Loading...</span></p>
+  <div style="margin-top: 20px; background: #f1f5f9; padding: 15px; border-radius: 10px;">
+    <h4 style="margin: 0 0 10px;">🏆 Game Stats</h4>
+    <p><strong>Wins:</strong> <span id="profile-wins">0</span></p>
+    <p><strong>Lead Score:</strong> <span id="profile-score">0</span></p>
+  </div>
+  <button onclick="updateUsername()">Update Username</button>
+  <button onclick="logout()" style="background: #ef4444; margin-top: 10px;">Logout</button>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+  const api = 'http://127.0.0.1:5000';
+  let isSignup = false;
+
+  function toggleForm() {
+    isSignup = !isSignup;
+    document.getElementById('form-title').textContent = isSignup ? 'Sign Up' : 'Sign In';
+    document.getElementById('auth-btn').textContent = isSignup ? 'Sign Up' : 'Sign In';
+    document.querySelector('.signup').style.display = isSignup ? 'block' : 'none';
+    document.querySelector('.signin').style.display = isSignup ? 'none' : 'block';
+    document.querySelector('.toggle-link').textContent =
+      isSignup ? 'Already have an account? Sign In' : "Don't have an account? Sign Up";
+    toast('');
+  }
+
+  // Password visibility toggles
+  document.getElementById('signin-toggle-password').onclick = () => togglePassword('signin-password', 'signin-toggle-password');
+  document.getElementById('signup-toggle-password').onclick = () => togglePassword('signup-password', 'signup-toggle-password');
+
+  function togglePassword(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = '🙈';
+    } else {
+      input.type = 'password';
+      icon.textContent = '👁️';
+    }
+  }
+
+  function toast(msg, success = false) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.background = success ? '#10b981' : '#ef4444';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  async function handleAuth() {
+    let username, password;
+
+    if (isSignup) {
+      username = document.getElementById('signup-username').value.trim();
+      password = document.getElementById('signup-password').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const dob = document.getElementById('signup-dob').value;
+      const phone = document.getElementById('signup-phone').value.trim();
+      if (!username || !password || !email || !dob || !phone)
+        return toast('Please fill out all sign-up fields');
+
+      const res = await fetch(api + '/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password, email, dob, phone })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast(data.message || 'Signed up!', true);
+        isSignup = false;
+        toggleForm();
+        document.getElementById('signin-username').value = username;
+        document.getElementById('signin-password').value = password;
+        handleAuth(); // auto login
+      } else {
+        toast(data.error || 'Signup failed');
+      }
+
+    } else {
+      username = document.getElementById('signin-username').value.trim();
+      password = document.getElementById('signin-password').value.trim();
+      if (!username || !password) return toast('Please enter username and password');
+
+      const res = await fetch(api + '/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('user', username);
+        toast('Welcome!', true);
+        loadProfile();
+      } else {
+        toast(data.error || 'Login failed');
+      }
+    }
+  }
+
+  async function loadProfile() {
+    const res = await fetch(api + '/profile', { credentials: 'include' });
+    if (!res.ok) return;
+
+    const data = await res.json();
+    document.getElementById('auth-container').style.display = 'none';
+    document.getElementById('profile').style.display = 'block';
+    document.getElementById('editable-username').value = data.username || '';
+    document.getElementById('profile-email').textContent = data.email || 'Not provided';
+    document.getElementById('profile-joined').textContent = data.joined || 'N/A';
+    document.getElementById('profile-wins').textContent = data.wins ?? 0;
+    document.getElementById('profile-score').textContent = data.score ?? 0;
+    if (data.avatar) document.getElementById('profile-avatar').src = data.avatar;
+  }
+
+  async function updateUsername() {
+    const newUsername = document.getElementById('editable-username').value.trim();
+    if (!newUsername) return toast('Username cannot be empty');
+    const res = await fetch(api + '/update-username', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ username: newUsername })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      localStorage.setItem('user', newUsername);
+      toast('Username updated!', true);
+    } else {
+      toast(data.error || 'Failed to update username');
+    }
+  }
+
+  async function logout() {
+    await fetch(api + '/logout', { method: 'POST', credentials: 'include' });
+    document.getElementById('auth-container').style.display = 'block';
+    document.getElementById('profile').style.display = 'none';
+    toast('Logged out', true);
+  }
+
+  window.onload = () => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) document.getElementById('signin-username').value = savedUser;
+    loadProfile();
+  };
+</script>
+
+</body>
+</html>
